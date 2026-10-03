@@ -11,6 +11,11 @@ relevant system screen.
 | Battery-optimization exemption | Keeps the OS from suspending the worker when the screen is off. |
 | Autostart (OEM settings) | Lets the worker come back after reboot and after aggressive background kills. |
 
+The controlled self-upgrade needs one conditional toggle: **Allow from this
+source** (install unknown apps) for this app. Android links to that setting
+from the install prompt; test rigs can pre-grant it with
+`adb shell appops set io.ntnl.cybion.worker REQUEST_INSTALL_PACKAGES allow`.
+
 ## Xiaomi / HyperOS notes
 
 - `adb install` shows a "USB 安装提示" confirmation that requires an unlocked
@@ -20,6 +25,8 @@ relevant system screen.
 - Sideloaded apps may get their notification app-op set to `ignore`. Check and
   fix it with:
   `adb shell cmd appops set io.ntnl.cybion.worker POST_NOTIFICATION allow`.
+- App-driven upgrades show an install confirmation as well; keep the screen
+  unlocked when the upgrade dialog appears.
 - MIUI kills background processes aggressively even with a foreground service.
   The battery exemption helps; since 0.1.5 the app also restarts the worker
   whenever it is reopened while **Enable Worker** is on, so reopening the app

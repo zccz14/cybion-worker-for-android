@@ -13,6 +13,9 @@ the app; both name the current phase.
 | Screenshot fails or is black | Screen off, or device below API 30 | Wake the device and retry. |
 | One `409` on heartbeat right after a restart | Normal boot-id handoff | Ignore it; the next heartbeat succeeds. |
 | "browser_control is not supported" | By design on Android | Use `computer_use` with `open`, or the `open` action, instead. |
+| Upgrade waiting for the install to finish | The phone has not confirmed the system install prompt yet | Unlock the phone and confirm the install dialog; the console keeps the pending state until the restart reports the new version. |
+| Upgrade failed: cancelled | The install confirmation was dismissed | Request the upgrade again from the console; the current version keeps running. |
+| Upgrade failed after a restart | The new version did not come up | Check `adb logcat -s cybion-worker`; the worker keeps the previous version and the upgrade can be requested again. |
 
 ## Where state lives
 
@@ -20,6 +23,7 @@ the app; both name the current phase.
 | --- | --- |
 | `worker.toml` | Worker configuration: controller URL, worker id, access token. |
 | `worker.pairing.json` | Pending pairing (removed after approval). |
+| `upgrade/cybion-worker-android-aarch64.apk` | Latest downloaded, verified APK for a controlled upgrade (replaced on each attempt). |
 
 **Reset pairing** in the app removes both files. Both live in the app's private
 data directory (`/data/data/io.ntnl.cybion.worker/files`), reachable with

@@ -51,8 +51,11 @@ Like the desktop Worker, this app is a remote-control agent, not a sandbox.
 - `bash` runs as the app's sandbox user (no root, no other apps' data).
 - The screen must be unlocked for touch actions to reach apps.
 - Screenshots require Android 11+.
-- Remote upgrade events from the Controller are answered with a clear failure;
-  update by installing a newer APK.
+- Remote upgrades download the official APK from the Cybion mirror (GitHub
+  Releases fallback), verify its SHA-256 checksum and signing certificate, then
+  ask the system installer for confirmation; the worker restarts into the new
+  version afterwards. The first upgrade may ask you to allow installs from this
+  app.
 
 ## Development
 
