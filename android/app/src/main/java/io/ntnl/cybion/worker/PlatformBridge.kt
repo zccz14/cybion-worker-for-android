@@ -117,7 +117,7 @@ object PlatformBridge {
             val sessionId = installer.createSession(params)
             installer.openSession(sessionId).use { session ->
                 file.inputStream().use { input ->
-                    session.openWrite("cybion-worker.apk", 0, file.length).use { output ->
+                    session.openWrite("cybion-worker.apk", 0, file.length()).use { output ->
                         input.copyTo(output)
                         session.fsync(output)
                     }
