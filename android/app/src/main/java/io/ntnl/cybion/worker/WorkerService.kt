@@ -78,6 +78,7 @@ class WorkerService : Service() {
     }
 
     private fun stopWorker() {
+        Prefs.setEnabled(this, false)
         WorkerCore.nativeStop()
         isRunning = false
         stopForeground(STOP_FOREGROUND_REMOVE)

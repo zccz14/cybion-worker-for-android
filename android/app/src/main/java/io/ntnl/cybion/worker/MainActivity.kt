@@ -88,9 +88,9 @@ class MainActivity : Activity() {
             )
         }
         buttonRetry.setOnClickListener {
-            startService(
-                Intent(this, WorkerService::class.java).setAction(WorkerService.ACTION_STOP)
-            )
+            // A single start request: the engine replaces a dead worker thread and
+            // no-ops while one is already running. Stopping first would race the
+            // service teardown against the restart and kill the fresh engine.
             startForegroundService(
                 Intent(this, WorkerService::class.java).setAction(WorkerService.ACTION_START)
             )
@@ -113,6 +113,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        switchEnabled.isChecked = Prefs.enabled(this)
         handler.post(poll)
     }
 
@@ -155,11 +156,9 @@ class MainActivity : Activity() {
             "failed" -> getString(R.string.phase_failed, phase.optString("message", ""))
             else -> getString(R.string.phase_stopped)
         }
-        snapshot.optString("machine_id")
-            .takeIf { it.isNotEmpty() }
+        snapshot.nullableString("machine_id")
             ?.let { lines += getString(R.string.status_worker_id, it) }
-        snapshot.optString("hostname")
-            .takeIf { it.isNotEmpty() }
+        snapshot.nullableString("hostname")
             ?.let { lines += getString(R.string.status_hostname, it) }
         textStatus.text = lines.joinToString("\n")
 
@@ -205,3 +204,7 @@ class MainActivity : Activity() {
         }
     }
 }
+
+/** `optString` renders JSON null as the string "null"; return a real null instead. */
+private fun JSONObject.nullableString(key: String): String? =
+    if (isNull(key)) null else optString(key).takeIf { it.isNotEmpty() }
