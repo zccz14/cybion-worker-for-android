@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cybion Worker</string>
+    <string name="enable_worker">启用 Worker</string>
+
+    <string name="phase_stopped">已停止</string>
+    <string name="phase_starting">启动中…</string>
+    <string name="phase_pairing">等待在 Cybion 控制台批准。</string>
+    <string name="phase_connecting">正在连接 Cybion…</string>
+    <string name="phase_online">已连接，此手机可以接收任务。</string>
+    <string name="phase_reconnecting">连接中断，重试中（第 %1$d 次）…</string>
+    <string name="phase_failed">失败：%1$s</string>
+
+    <string name="status_worker_id">Worker ID：%1$s</string>
+    <string name="status_hostname">设备：%1$s</string>
+
+    <string name="pairing_code_label">配对码</string>
+    <string name="pairing_hint">请在 Cybion 控制台批准：Workers → Connect a device。请勿批准他人发送的配对码。</string>
+    <string name="pairing_open">在浏览器中批准</string>
+
+    <string name="permissions_title">权限</string>
+    <string name="permission_notifications">通知</string>
+    <string name="permission_accessibility">无障碍</string>
+    <string name="permission_battery">电池</string>
+    <string name="permission_granted">已授予</string>
+    <string name="permission_missing">未授予</string>
+
+    <string name="retry">重试</string>
+    <string name="reset_pairing">清除配对</string>
+    <string name="reset_pairing_confirm">删除此手机上保存的配对信息？之后需要重新配对。</string>
+
+    <string name="notification_channel_name">Worker 状态</string>
+    <string name="notification_channel_description">显示 Cybion Worker 正在运行。</string>
+    <string name="notification_title">Cybion Worker</string>
+    <string name="notification_text">正在后台运行</string>
+    <string name="notification_stop">停止</string>
+
+    <string name="accessibility_service_label">Cybion Worker</string>
+    <string name="accessibility_service_description">允许已配对的 Cybion 账号控制此手机：点击、滑动、输入、截图和 UI 树。</string>
+
+    <string name="footer">v%1$s · github.com/zccz14/cybion-worker-for-android</string>
+    <string name="status_native_error">原生核心不可用：%1$s</string>
+</resources>

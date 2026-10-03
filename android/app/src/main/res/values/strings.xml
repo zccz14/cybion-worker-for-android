@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cybion Worker</string>
+    <string name="enable_worker">Enable Worker</string>
+
+    <string name="phase_stopped">Stopped</string>
+    <string name="phase_starting">Starting…</string>
+    <string name="phase_pairing">Waiting for approval in the Cybion console.</string>
+    <string name="phase_connecting">Connecting to Cybion…</string>
+    <string name="phase_online">Connected. This phone is ready for tasks.</string>
+    <string name="phase_reconnecting">Connection lost; retrying (attempt %1$d)…</string>
+    <string name="phase_failed">Failed: %1$s</string>
+
+    <string name="status_worker_id">Worker ID: %1$s</string>
+    <string name="status_hostname">Device: %1$s</string>
+
+    <string name="pairing_code_label">Pairing code</string>
+    <string name="pairing_hint">Approve this device in the Cybion console: Workers → Connect a device. Never approve a code someone else sent you.</string>
+    <string name="pairing_open">Approve in browser</string>
+
+    <string name="permissions_title">Permissions</string>
+    <string name="permission_notifications">Notifications</string>
+    <string name="permission_accessibility">Accessibility</string>
+    <string name="permission_battery">Battery</string>
+    <string name="permission_granted">Granted</string>
+    <string name="permission_missing">Missing</string>
+
+    <string name="retry">Retry</string>
+    <string name="reset_pairing">Reset pairing</string>
+    <string name="reset_pairing_confirm">Delete the stored pairing on this phone? You will need to pair again.</string>
+
+    <string name="notification_channel_name">Worker status</string>
+    <string name="notification_channel_description">Shows that the Cybion Worker is running.</string>
+    <string name="notification_title">Cybion Worker</string>
+    <string name="notification_text">Running in the background</string>
+    <string name="notification_stop">Stop</string>
+
+    <string name="accessibility_service_label">Cybion Worker</string>
+    <string name="accessibility_service_description">Lets the paired Cybion account control this phone: tap, swipe, type, screenshots, and the UI tree.</string>
+
+    <string name="footer">v%1$s · github.com/zccz14/cybion-worker-for-android</string>
+    <string name="status_native_error">Native core unavailable: %1$s</string>
+</resources>
