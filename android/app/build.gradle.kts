@@ -45,6 +45,9 @@ android {
                 storePassword = System.getenv("CYBION_ANDROID_KEYSTORE_PASSWORD")
                 keyAlias = System.getenv("CYBION_ANDROID_KEY_ALIAS")
                 keyPassword = System.getenv("CYBION_ANDROID_KEY_PASSWORD")
+                // The keystore is generated with openssl as PKCS12; name and type
+                // are stated explicitly so no JKS heuristics are involved.
+                storeType = "PKCS12"
             }
         }
     }
