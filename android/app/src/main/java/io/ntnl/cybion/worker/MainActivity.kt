@@ -114,6 +114,13 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         switchEnabled.isChecked = Prefs.enabled(this)
+        // OEM killers (MIUI and friends) tear the service down aggressively. When
+        // the user opens the app while the worker is enabled, bring it back.
+        if (Prefs.enabled(this) && !WorkerService.isRunning) {
+            startForegroundService(
+                Intent(this, WorkerService::class.java).setAction(WorkerService.ACTION_START)
+            )
+        }
         handler.post(poll)
     }
 

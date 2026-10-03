@@ -41,3 +41,5 @@ diagnostics.
   activity, service, and accessibility service; everything else stays in Rust.
 - Foreground service with `specialUse` type: the worker is a user-visible,
   user-enabled remote-execution agent.
+- The app version tracks the controller's supported-worker floor (`0.1.4`):
+  the console only offers checks (diagnostics) to workers at or above it.

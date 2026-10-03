@@ -33,8 +33,8 @@ android {
         // The Cybion console enables worker checks (diagnostics) for workers at
         // 0.1.4 or newer; this app implements the full checks route family, so
         // its version tracks that supported-worker floor.
-        versionCode = 2
-        versionName = "0.1.4"
+        versionCode = 3
+        versionName = "0.1.5"
     }
 
     signingConfigs {
@@ -45,6 +45,9 @@ android {
                 storePassword = System.getenv("CYBION_ANDROID_KEYSTORE_PASSWORD")
                 keyAlias = System.getenv("CYBION_ANDROID_KEY_ALIAS")
                 keyPassword = System.getenv("CYBION_ANDROID_KEY_PASSWORD")
+                // The keystore is generated with openssl as PKCS12; name and type
+                // are stated explicitly so no JKS heuristics are involved.
+                storeType = "PKCS12"
             }
         }
     }

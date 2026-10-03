@@ -48,9 +48,9 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/release.p12"
           {
-            echo "CYBION_ANDROID_KEYSTORE=$RUNNER_TEMP/release.jks"
+            echo "CYBION_ANDROID_KEYSTORE=$RUNNER_TEMP/release.p12"
             echo "CYBION_ANDROID_KEYSTORE_PASSWORD=$STORE_PASSWORD"
             echo "CYBION_ANDROID_KEY_ALIAS=$KEY_ALIAS"
             echo "CYBION_ANDROID_KEY_PASSWORD=$KEY_PASSWORD"
