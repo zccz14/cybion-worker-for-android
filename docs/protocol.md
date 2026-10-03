@@ -32,7 +32,7 @@ server-to-device traffic. Headers: `Authorization: Bearer <access_token>`,
 | --- | --- | --- |
 | `tool_call` | `{id, thread_id, name, arguments}` | execute a tool; checks ride the same event |
 | `cancel` | `{id}` | abort a running call |
-| `upgrade` | `{id, version, boot_id}` | answered with `POST .../upgrade {"status":"failed"}`; APK updates are manual |
+| `upgrade` | `{id, version, boot_id}` | controlled APK upgrade; see "Controlled upgrades" below |
 | `heartbeat` | `{}` | keep-alive marker |
 
 - A 45-second idle timeout ends the session and triggers reconnect with bounded
@@ -61,6 +61,27 @@ result to `POST .../{checks|calls}/{call_id}/result` as
 - **Cancellation**: `cancel` events signal per-call watch channels. `bash`
   kills the process group with `SIGKILL`; calls not yet started exit before
   running.
+
+## Controlled upgrades
+
+The console can queue a target version for the Worker. On `upgrade`:
+
+1. The device downloads `cybion-worker-android-aarch64.apk` for the requested
+   version from the Controller mirror (`{controller}/worker-release/{version}/`,
+   GitHub Releases fallback) together with its `.sha256` checksum.
+2. The archive must match the checksum, must be signed by the official release
+   certificate, and its `versionName` must equal the requested version; any
+   mismatch aborts the upgrade before the installer is engaged.
+3. The verified APK is streamed into a `PackageInstaller` session, and the
+   system shows its own confirmation prompt before installing.
+4. The Worker reports `installing` once the installer owns the upgrade, and
+   `failed` with a reason on any error or cancellation. Success is not
+   reported: the Controller infers it from the version that the restarting
+   Worker reports, and a restart without the new version is recorded as
+   `failed`.
+5. `android.intent.action.MY_PACKAGE_REPLACED` brings the worker back after the
+   update while it is enabled, so an attended upgrade needs only the system
+   confirmation.
 
 ## Liveness
 

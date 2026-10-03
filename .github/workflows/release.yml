@@ -64,11 +64,14 @@ jobs:
       - name: Assemble release APK
         run: cd android && ./gradlew --no-daemon :app:assembleRelease
 
-      - name: Checksums
-        run: cd android/app/build/outputs/apk/release && sha256sum *.apk > SHA256SUMS
+      - name: Package release assets
+        run: |
+          cd android/app/build/outputs/apk/release
+          mv app-release.apk cybion-worker-android-aarch64.apk
+          sha256sum cybion-worker-android-aarch64.apk > cybion-worker-android-aarch64.apk.sha256
 
       - uses: softprops/action-gh-release@v2
         with:
           files: |
-            android/app/build/outputs/apk/release/*.apk
-            android/app/build/outputs/apk/release/SHA256SUMS
+            android/app/build/outputs/apk/release/cybion-worker-android-aarch64.apk
+            android/app/build/outputs/apk/release/cybion-worker-android-aarch64.apk.sha256

@@ -13,6 +13,7 @@ mod protocol;
 mod resources;
 mod state;
 mod tools;
+mod upgrade;
 
 #[cfg(target_os = "android")]
 mod entry;

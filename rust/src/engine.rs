@@ -122,6 +122,7 @@ pub fn stop() {
         return;
     };
     let _ = engine.shutdown.send(true);
+    crate::upgrade::reset();
     if let Some(handle) = engine.handle.take() {
         let (done_sender, done_receiver) = mpsc::channel();
         thread::spawn(move || {
@@ -216,7 +217,14 @@ async fn run_worker(
             state::set_phase(&state, Phase::Connecting);
         }
         let outcome = tokio::select! {
-            result = event_session(client.clone(), config.clone(), delivery.clone(), state.clone()) => Outcome::Session(result),
+            result = event_session(
+                client.clone(),
+                config.clone(),
+                delivery.clone(),
+                state.clone(),
+                config_dir.clone(),
+                shutdown.clone(),
+            ) => Outcome::Session(result),
             _ = shutdown_requested(shutdown.clone()) => Outcome::Shutdown,
         };
         match outcome {
@@ -264,6 +272,8 @@ async fn event_session(
     config: config::WorkerConfig,
     delivery: Arc<DeliveryState>,
     state: SharedState,
+    config_dir: PathBuf,
+    shutdown: watch::Receiver<bool>,
 ) -> Result<()> {
     let device = DEVICE.get().context("worker device info is missing")?;
     let response = client
@@ -311,14 +321,17 @@ async fn event_session(
                 } else {
                     log::info!(
                         target: "cybion_worker",
-                        "upgrade to {} requested; reporting that Android updates are manual",
+                        "upgrade to {} requested",
                         upgrade.version
                     );
-                    let (client, config, boot_id) =
-                        (client.clone(), config.clone(), delivery.boot_id.clone());
-                    tokio::spawn(async move {
-                        report_upgrade_rejected(&client, &config, &boot_id, &upgrade.id).await;
-                    });
+                    crate::upgrade::spawn(
+                        client.clone(),
+                        config.clone(),
+                        delivery.boot_id.clone(),
+                        config_dir.clone(),
+                        upgrade,
+                        shutdown.clone(),
+                    );
                 }
             }
         }
@@ -458,21 +471,4 @@ async fn post_json(
         .await?
         .error_for_status()?;
     Ok(())
-}
-
-async fn report_upgrade_rejected(
-    client: &Client,
-    config: &config::WorkerConfig,
-    boot_id: &str,
-    upgrade_id: &str,
-) {
-    let url = format!("{}/upgrade", protocol::worker_url(config));
-    let payload = json!({
-        "id": upgrade_id,
-        "status": "failed",
-        "error": "Android Workers update by installing a newer APK from GitHub Releases; remote binary upgrade is not supported.",
-    });
-    if let Err(error) = post_json(client, &config.access_token, boot_id, &url, &payload).await {
-        log::warn!(target: "cybion_worker", "upgrade rejection report failed: {error}");
-    }
 }

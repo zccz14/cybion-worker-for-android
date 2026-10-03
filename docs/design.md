@@ -8,9 +8,9 @@ listening sockets on the phone.
 
 | Layer | Language | Responsibility |
 | --- | --- | --- |
-| Protocol core | Rust | Pairing, SSE session, delivery receipts, dedup, retries, heartbeats, resources, tool dispatch |
-| Platform bridge | Rust -> Kotlin (JNI) | Gestures, text input, screenshots, UI tree, app launch, global actions |
-| Android shell | Kotlin | Foreground service, accessibility service, boot receiver, minimal UI |
+| Protocol core | Rust | Pairing, SSE session, delivery receipts, dedup, retries, heartbeats, resources, tool dispatch, controlled upgrades |
+| Platform bridge | Rust -> Kotlin (JNI) | Gestures, text input, screenshots, UI tree, app launch, global actions, APK inspection, package installation |
+| Android shell | Kotlin | Foreground service, accessibility service, boot/update receivers, minimal UI |
 | Build | Gradle + cargo-ndk | Produces one APK containing the Rust `cdylib` |
 
 ## Wire protocol (as implemented)
@@ -22,7 +22,7 @@ listening sockets on the phone.
 | Receipt | `POST .../{checks\|calls}/{call_id}/received` |
 | Result | `POST .../{checks\|calls}/{call_id}/result` |
 | Liveness | `POST .../heartbeat` and `POST .../resources` every 10 s |
-| Upgrade | answered with `POST .../upgrade {"status":"failed"}` (APK updates are manual) |
+| Upgrade | mirror-first APK download (GitHub fallback), SHA-256 and signing-certificate checks, `PackageInstaller` hand-off, reports `installing`/`failed` |
 
 ## Tool coverage
 
