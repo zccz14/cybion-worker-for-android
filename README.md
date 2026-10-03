@@ -66,11 +66,15 @@ ANDROID_HOME=<sdk> JAVA_HOME=<jdk17> ./gradlew :app:assembleDebug
 
 `pr-check` runs Rust formatting, clippy, tests, and builds the debug APK.
 
-## Protocol
+## Documentation
 
-The wire protocol is the Cybion Worker protocol (pairing, SSE event stream,
-delivery receipts, retries). The desktop implementation lives at
-[zccz14/cybion-worker](https://github.com/zccz14/cybion-worker).
+- [docs/design.md](docs/design.md) — architecture and decisions.
+- [docs/protocol.md](docs/protocol.md) — the wire protocol as implemented.
+- [docs/permissions.md](docs/permissions.md) — grants and OEM notes.
+- [docs/troubleshooting.md](docs/troubleshooting.md) — failure modes and fixes.
+
+The wire protocol is the Cybion Worker protocol; the desktop implementation
+lives at [zccz14/cybion-worker](https://github.com/zccz14/cybion-worker).
 
 ## License
 
