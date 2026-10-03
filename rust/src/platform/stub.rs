@@ -39,3 +39,19 @@ pub fn screen_size() -> Result<(i32, i32)> {
 pub fn accessibility_enabled() -> Result<bool> {
     Ok(false)
 }
+
+pub fn apk_signer(_path: &std::path::Path) -> Result<String> {
+    unavailable()
+}
+
+pub fn apk_version(_path: &std::path::Path) -> Result<String> {
+    unavailable()
+}
+
+pub fn install_apk(_path: &std::path::Path) -> Result<()> {
+    unavailable()
+}
+
+pub fn install_state() -> Result<String> {
+    unavailable()
+}

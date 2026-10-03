@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::sync::OnceLock;
 
 use anyhow::{Context, Result, bail};
@@ -45,6 +46,23 @@ fn call_bool(name: &str, signature: &str, args: &[JValue]) -> Result<bool> {
 fn call_string(name: &str, signature: &str, args: &[JValue]) -> Result<String> {
     with_env(|env| {
         let result = env.call_static_method(bridge_class()?, name, signature, args)?;
+        let JValueGen::Object(object) = result else {
+            bail!("{name} returned an unexpected value");
+        };
+        let text = JString::from(object);
+        Ok(env.get_string(&text)?.into())
+    })
+}
+
+fn call_string_with_string(name: &str, value: &str) -> Result<String> {
+    with_env(|env| {
+        let argument = env.new_string(value)?;
+        let result = env.call_static_method(
+            bridge_class()?,
+            name,
+            "(Ljava/lang/String;)Ljava/lang/String;",
+            &[JValue::Object(argument.as_ref())],
+        )?;
         let JValueGen::Object(object) = result else {
             bail!("{name} returned an unexpected value");
         };
@@ -115,4 +133,29 @@ pub fn screen_size() -> Result<(i32, i32)> {
 
 pub fn accessibility_enabled() -> Result<bool> {
     call_bool("accessibilityEnabled", "()Z", &[])
+}
+
+/// SHA-256 of the APK signing certificate (lowercase hex), or an empty
+/// string when the archive cannot be inspected.
+pub fn apk_signer(path: &Path) -> Result<String> {
+    call_string_with_string("apkSigner", &path.to_string_lossy())
+}
+
+pub fn apk_version(path: &Path) -> Result<String> {
+    call_string_with_string("apkVersion", &path.to_string_lossy())
+}
+
+/// Hands the verified APK to the package installer; an empty bridge reply
+/// means the install session was committed.
+pub fn install_apk(path: &Path) -> Result<()> {
+    let error = call_string_with_string("installApk", &path.to_string_lossy())?;
+    if error.is_empty() {
+        Ok(())
+    } else {
+        bail!("{error}")
+    }
+}
+
+pub fn install_state() -> Result<String> {
+    call_string("installState", "()Ljava/lang/String;", &[])
 }
