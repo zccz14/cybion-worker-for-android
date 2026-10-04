@@ -33,8 +33,8 @@ android {
         // The Cybion console enables worker checks (diagnostics) for workers at
         // 0.1.4 or newer; this app implements the full checks route family, so
         // its version tracks that supported-worker floor.
-        versionCode = 6
-        versionName = "0.1.8"
+        versionCode = 7
+        versionName = "0.1.9"
     }
 
     signingConfigs {
