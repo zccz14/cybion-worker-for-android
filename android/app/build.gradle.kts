@@ -33,8 +33,8 @@ android {
         // The Cybion console enables worker checks (diagnostics) for workers at
         // 0.1.4 or newer; this app implements the full checks route family, so
         // its version tracks that supported-worker floor.
-        versionCode = 5
-        versionName = "0.1.7"
+        versionCode = 6
+        versionName = "0.1.8"
     }
 
     signingConfigs {
@@ -83,4 +83,9 @@ android {
 
 tasks.named("preBuild") {
     dependsOn(cargoNdkBuild)
+}
+
+dependencies {
+    // FileProvider hands the verified upgrade APK to the system installer.
+    implementation("androidx.core:core:1.15.0")
 }

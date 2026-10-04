@@ -72,10 +72,16 @@ The console can queue a target version for the Worker. On `upgrade`:
 2. The archive must match the checksum, must be signed by the official release
    certificate, and its `versionName` must equal the requested version; any
    mismatch aborts the upgrade before the installer is engaged.
-3. The verified APK is streamed into a `PackageInstaller` session, and the
-   system shows its own confirmation prompt before installing.
-4. The Worker reports `installing` once the installer owns the upgrade, and
-   `failed` with a reason on any error or cancellation. Success is not
+3. The verified APK is handed to the system package installer through a
+   `FileProvider` content URI (`ACTION_VIEW` with
+   `application/vnd.android.package-archive`). A heads-up notification with
+   the same intent is posted as a fallback: when the OS suppresses activity
+   starts issued from the background, tapping the notification opens the
+   installer just the same.
+4. The Worker reports `installing` once the installer owns the upgrade. It
+   reports `failed` with a reason when the installer cannot be engaged at
+   all, and also when the confirmation never arrives within 30 minutes;
+   either way the console can request the upgrade again. Success is not
    reported: the Controller infers it from the version that the restarting
    Worker reports, and a restart without the new version is recorded as
    `failed`.

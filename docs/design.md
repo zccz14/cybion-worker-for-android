@@ -22,7 +22,7 @@ listening sockets on the phone.
 | Receipt | `POST .../{checks\|calls}/{call_id}/received` |
 | Result | `POST .../{checks\|calls}/{call_id}/result` |
 | Liveness | `POST .../heartbeat` and `POST .../resources` every 10 s |
-| Upgrade | mirror-first APK download (GitHub fallback), SHA-256 and signing-certificate checks, `PackageInstaller` hand-off, reports `installing`/`failed` |
+| Upgrade | mirror-first APK download (GitHub fallback), SHA-256 and signing-certificate checks, FileProvider + system-installer hand-off (with notification fallback), reports `installing`/`failed` |
 
 ## Tool coverage
 
@@ -43,3 +43,8 @@ diagnostics.
   user-enabled remote-execution agent.
 - The app version tracks the controller's supported-worker floor (`0.1.4`):
   the console only offers checks (diagnostics) to workers at or above it.
+- Upgrades hand the APK to the system installer through a `FileProvider`
+  `ACTION_VIEW` intent (plus a notification fallback), not a
+  `PackageInstaller` session: MIUI/HyperOS rejects session installs on
+  Android 14, while the intent path is the standard attended route also
+  used by file managers.

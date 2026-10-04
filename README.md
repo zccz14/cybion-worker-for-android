@@ -53,9 +53,11 @@ Like the desktop Worker, this app is a remote-control agent, not a sandbox.
 - Screenshots require Android 11+.
 - Remote upgrades download the official APK from the Cybion mirror (GitHub
   Releases fallback), verify its SHA-256 checksum and signing certificate, then
-  ask the system installer for confirmation; the worker restarts into the new
-  version afterwards. The first upgrade may ask you to allow installs from this
-  app.
+  hand it to the system installer for confirmation (a notification carries the
+  same action when the installer cannot open by itself); the worker restarts
+  into the new version afterwards. The first upgrade may ask you to allow
+  installs from this app; on MIUI/HyperOS, builds up to 0.1.7 need one manual
+  sideload first.
 
 ## Development
 
