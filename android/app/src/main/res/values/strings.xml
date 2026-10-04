@@ -34,6 +34,9 @@
     <string name="notification_title">Cybion Worker</string>
     <string name="notification_text">Running in the background</string>
     <string name="notification_stop">Stop</string>
+    <string name="upgrade_channel_name">Upgrade installs</string>
+    <string name="upgrade_notification_title">Cybion Worker update ready</string>
+    <string name="upgrade_notification_text">Tap to confirm the update in the system installer.</string>
 
     <string name="accessibility_service_label">Cybion Worker</string>
     <string name="accessibility_service_description">Lets the paired Cybion account control this phone: tap, swipe, type, screenshots, and the UI tree.</string>

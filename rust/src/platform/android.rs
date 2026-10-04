@@ -145,8 +145,8 @@ pub fn apk_version(path: &Path) -> Result<String> {
     call_string_with_string("apkVersion", &path.to_string_lossy())
 }
 
-/// Hands the verified APK to the package installer; an empty bridge reply
-/// means the install session was committed.
+/// Hands the verified APK to the system installer; an empty bridge reply
+/// means the installer was engaged (its UI or the fallback notification).
 pub fn install_apk(path: &Path) -> Result<()> {
     let error = call_string_with_string("installApk", &path.to_string_lossy())?;
     if error.is_empty() {
@@ -156,6 +156,8 @@ pub fn install_apk(path: &Path) -> Result<()> {
     }
 }
 
+/// Installer progress reported by the shell: `idle`, `user_action`, or
+/// `failed:<message>`.
 pub fn install_state() -> Result<String> {
     call_string("installState", "()Ljava/lang/String;", &[])
 }

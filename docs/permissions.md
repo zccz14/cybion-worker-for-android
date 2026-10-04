@@ -16,6 +16,10 @@ source** (install unknown apps) for this app. Android links to that setting
 from the install prompt; test rigs can pre-grant it with
 `adb shell appops set io.ntnl.cybion.worker REQUEST_INSTALL_PACKAGES allow`.
 
+Since v0.1.8 the upgrade hands the verified APK to the system installer and
+posts an "update ready" notification as a fallback when the installer UI
+cannot open by itself (OEM background-activity restrictions).
+
 ## Xiaomi / HyperOS notes
 
 - `adb install` shows a "USB 安装提示" confirmation that requires an unlocked
@@ -25,8 +29,13 @@ from the install prompt; test rigs can pre-grant it with
 - Sideloaded apps may get their notification app-op set to `ignore`. Check and
   fix it with:
   `adb shell cmd appops set io.ntnl.cybion.worker POST_NOTIFICATION allow`.
-- App-driven upgrades show an install confirmation as well; keep the screen
-  unlocked when the upgrade dialog appears.
+- App-driven upgrades open the system installer (or post the fallback
+  notification when the UI cannot open); keep the screen unlocked and confirm
+  the install.
+- MIUI/HyperOS rejects `PackageInstaller` session installs on Android 14
+  (SDK ≤ 34). Builds up to 0.1.7 cannot self-upgrade there and need one
+  manual sideload of v0.1.8 or newer; later upgrades use the system installer
+  path above.
 - MIUI kills background processes aggressively even with a foreground service.
   The battery exemption helps; since 0.1.5 the app also restarts the worker
   whenever it is reopened while **Enable Worker** is on, so reopening the app

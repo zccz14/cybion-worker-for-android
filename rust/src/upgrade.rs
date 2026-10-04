@@ -1,7 +1,7 @@
 //! Controlled APK upgrade. The Controller queues a target version over SSE;
 //! the Worker downloads the matching APK from the Controller mirror (GitHub
 //! Releases fallback), verifies the SHA-256 checksum and the pinned signing
-//! certificate, hands the file to the platform installer, and reports
+//! certificate, hands the file to the system installer, and reports
 //! `installing`/`failed`. Success is inferred by the Controller from the
 //! version reported after the automatic restart.
 
@@ -36,7 +36,7 @@ const LOG_EVERY: u64 = 4 * 1024 * 1024;
 
 /// One upgrade at a time. The Controller repeats the `upgrade` event every
 /// second until the status changes, so repeats and parallel requests must not
-/// start a second download or a second install session.
+/// start a second download or a second installer hand-off.
 struct Active {
     id: String,
     handed_off: bool,
@@ -184,35 +184,28 @@ async fn run(
     if *shutdown.borrow() {
         return Ok(Outcome::Done);
     }
-    log::info!(target: "cybion_worker", "handing {ASSET} to the package installer");
+    log::info!(target: "cybion_worker", "handing {ASSET} to the system installer");
     platform::install_apk(&apk).context("the package installer rejected the APK")?;
     mark_handed_off(&upgrade.id);
     if let Err(error) = report(client, config, boot_id, &upgrade.id, "installing", None).await {
         log::warn!(target: "cybion_worker", "installing report rejected: {error:#}");
     }
+    // The system installer owns the flow from here. Success is only visible
+    // as a restarted process reporting the target version, from which the
+    // Controller infers completion. Failures that can still surface come
+    // through UpgradeInstall; if the confirmation never arrives, report the
+    // upgrade as failed so the console can request it again.
     let deadline = tokio::time::Instant::now() + POLL_DEADLINE;
     loop {
         if *shutdown.borrow() {
             return Ok(Outcome::HandedOff);
         }
-        match platform::install_state().unwrap_or_default().as_str() {
-            "success" => {
-                log::info!(
-                    target: "cybion_worker",
-                    "the package installer reported success; restarting into {target}"
-                );
-                return Ok(Outcome::HandedOff);
-            }
-            "cancelled" => bail!("installation was cancelled on the device"),
-            state if state.starts_with("failed:") => bail!("{}", &state["failed:".len()..]),
-            _ => {}
+        let state = platform::install_state().unwrap_or_default();
+        if let Some(message) = state.strip_prefix("failed:") {
+            bail!("{message}");
         }
         if tokio::time::Instant::now() >= deadline {
-            log::warn!(
-                target: "cybion_worker",
-                "install confirmation is still pending; leaving the upgrade to the next restart"
-            );
-            return Ok(Outcome::HandedOff);
+            bail!("the system installer is still waiting for confirmation on the device");
         }
         tokio::time::sleep(POLL_INTERVAL).await;
     }
@@ -338,12 +331,12 @@ mod tests {
 
     #[test]
     fn asset_sources_prefer_the_controller_mirror() {
-        let sources = asset_sources("https://cybion.ntnl.io/", "v0.1.7");
+        let sources = asset_sources("https://cybion.ntnl.io/", "v0.1.8");
         assert_eq!(
             sources,
             vec![
-                "https://cybion.ntnl.io/worker-release/v0.1.7/cybion-worker-android-aarch64.apk",
-                "https://github.com/zccz14/cybion-worker-for-android/releases/download/v0.1.7/cybion-worker-android-aarch64.apk",
+                "https://cybion.ntnl.io/worker-release/v0.1.8/cybion-worker-android-aarch64.apk",
+                "https://github.com/zccz14/cybion-worker-for-android/releases/download/v0.1.8/cybion-worker-android-aarch64.apk",
             ]
         );
     }
@@ -373,12 +366,12 @@ mod tests {
 
     #[test]
     fn only_newer_versions_are_considered() {
-        assert!(newer_version("0.1.7", "0.1.6"));
+        assert!(newer_version("0.1.8", "0.1.7"));
         assert!(newer_version("v0.2.0", "0.1.9"));
-        assert!(!newer_version("0.1.6", "0.1.6"));
-        assert!(!newer_version("0.1.5", "0.1.6"));
-        assert!(!newer_version("garbage", "0.1.6"));
-        assert!(!newer_version("0.1.7", "garbage"));
+        assert!(!newer_version("0.1.7", "0.1.7"));
+        assert!(!newer_version("0.1.6", "0.1.7"));
+        assert!(!newer_version("garbage", "0.1.7"));
+        assert!(!newer_version("0.1.8", "garbage"));
     }
 
     #[test]

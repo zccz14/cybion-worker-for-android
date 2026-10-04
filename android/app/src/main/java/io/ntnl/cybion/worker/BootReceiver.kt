@@ -13,6 +13,8 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action
         if (action != Intent.ACTION_BOOT_COMPLETED && action != Intent.ACTION_MY_PACKAGE_REPLACED) return
+        // A completed upgrade leaves the fallback install notification behind.
+        UpgradeInstall.cancel(context)
         if (!Prefs.enabled(context)) return
         try {
             context.startForegroundService(
