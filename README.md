@@ -9,6 +9,8 @@ the Cybion Controller, and executes tool calls on the device:
 - `computer_use` — screen control through an accessibility service: tap, swipe,
   long-press, text input, screenshots (Android 11+), UI tree, app launch, deep
   links, and global navigation keys.
+- `view_image` — read an image file (PNG, JPEG, WebP, or GIF, up to 4 MiB)
+  the app can access into the conversation.
 - `diagnostics` — the connection check used by the Cybion web console.
 
 `browser_control` is not available on Android and reports an explicit error.

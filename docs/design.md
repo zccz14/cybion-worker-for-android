@@ -29,7 +29,8 @@ listening sockets on the phone.
 `bash` maps to `/system/bin/sh` with process-group timeout and cancellation.
 `computer_use` keeps the desktop action names (`click`, `type`, `screenshot`)
 and adds Android-specific actions (`swipe`, `long_press`, `ui_tree`, `launch`,
-`open`, `key`) that reuse the existing argument schema. `browser_control` is
+`open`, `key`) that reuse the existing argument schema. `view_image` reads
+PNG/JPEG/WebP/GIF files up to 4 MiB into the conversation. `browser_control` is
 rejected with an explicit error and reported as `missing_dependency` in
 diagnostics.
 
