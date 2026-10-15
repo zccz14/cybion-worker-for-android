@@ -162,6 +162,7 @@ version = "0.1.0"
 dependencies = [
  "android_logger",
  "anyhow",
+ "base64 0.22.1",
  "futures-util",
  "hex",
  "jni",
