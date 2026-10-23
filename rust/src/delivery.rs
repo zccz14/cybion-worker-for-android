@@ -85,6 +85,17 @@ pub fn frame_end(bytes: &[u8]) -> Option<(usize, usize)> {
     })
 }
 
+/// Reconnect delay for the Worker event stream.
+///
+/// The stream carries the Worker's online registration, so waiting out the full
+/// delivery backoff (up to 30s) reads as "Worker offline" in the console even
+/// though only the stream was cut. Keep the wait short and jittered.
+pub fn stream_retry_delay(attempt: u32) -> Duration {
+    let base = (1_u64 << attempt.saturating_sub(1).min(2)) * 1000;
+    let jitter = u64::from(uuid::Uuid::new_v4().as_bytes()[0]) * base / 2048;
+    Duration::from_millis((base + jitter).min(5_000))
+}
+
 pub fn retry_delay(attempt: u32) -> Duration {
     let base = (1_u64 << attempt.saturating_sub(1).min(5)).min(30) * 1000;
     let jitter = u64::from(uuid::Uuid::new_v4().as_bytes()[0]) * base / 1024;
@@ -180,6 +191,10 @@ mod tests {
         assert_eq!(frame_end(b"partial"), None);
         for attempt in 0..100 {
             assert!(retry_delay(attempt) <= Duration::from_secs(30));
+        }
+        assert!(stream_retry_delay(1) >= Duration::from_secs(1));
+        for attempt in 1..100 {
+            assert!(stream_retry_delay(attempt) <= Duration::from_secs(5));
         }
     }
 

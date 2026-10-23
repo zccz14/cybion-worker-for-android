@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.util.Log
 import org.json.JSONObject
 
@@ -23,10 +24,14 @@ class WorkerService : Service() {
         const val ACTION_STOP = "io.ntnl.cybion.worker.action.STOP"
         const val CHANNEL_ID = "cybion_worker_status"
         private const val NOTIFICATION_ID = 1
+        private const val WAKELOCK_TAG = "CybionWorker:wakelock"
 
         @Volatile
         var isRunning = false
             private set
+
+        @Volatile
+        private var wakeLock: PowerManager.WakeLock? = null
     }
 
     override fun onCreate() {
@@ -57,12 +62,32 @@ class WorkerService : Service() {
 
     override fun onDestroy() {
         WorkerCore.nativeStop()
+        releaseWakeLock()
         isRunning = false
         super.onDestroy()
     }
 
+    /**
+     * Swiping the task away stops the service on several OEM builds even though
+     * it is sticky. Re-arm it right away while the user still has it enabled.
+     */
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        if (Prefs.enabled(this)) {
+            try {
+                startForegroundService(
+                    Intent(this, WorkerService::class.java).setAction(ACTION_START)
+                )
+            } catch (error: Exception) {
+                Log.w(TAG, "could not re-arm the worker after the task was removed", error)
+            }
+        }
+        super.onTaskRemoved(rootIntent)
+    }
+
     private fun startWorker() {
         startForegroundCompat()
+        acquireWakeLock()
+        WorkerWatchdogReceiver.schedule(this)
         if (isRunning) return
         val started = try {
             WorkerCore.nativeStart(filesDir.absolutePath, deviceInfoJson())
@@ -81,8 +106,32 @@ class WorkerService : Service() {
         Prefs.setEnabled(this, false)
         WorkerCore.nativeStop()
         isRunning = false
+        WorkerWatchdogReceiver.cancel(this)
+        releaseWakeLock()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
+    }
+
+    /**
+     * A foreground service keeps the app visible but does not keep the CPU
+     * awake: with the screen off the kernel may suspend timers and sockets,
+     * which surfaces as late heartbeats and a dropped event stream - i.e. the
+     * Worker reading as offline. Hold a partial lock for the whole run.
+     */
+    private fun acquireWakeLock() {
+        if (wakeLock?.isHeld == true) return
+        val power = getSystemService(PowerManager::class.java) ?: return
+        wakeLock = power
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKELOCK_TAG)
+            .apply {
+                setReferenceCounted(false)
+                acquire()
+            }
+    }
+
+    private fun releaseWakeLock() {
+        wakeLock?.let { lock -> if (lock.isHeld) lock.release() }
+        wakeLock = null
     }
 
     private fun startForegroundCompat() {

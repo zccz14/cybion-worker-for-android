@@ -39,7 +39,11 @@ cannot open by itself (OEM background-activity restrictions).
 - MIUI kills background processes aggressively even with a foreground service.
   The battery exemption helps; since 0.1.5 the app also restarts the worker
   whenever it is reopened while **Enable Worker** is on, so reopening the app
-  is enough to bring the worker back.
+  is enough to bring the worker back. Since 0.1.11 the service holds a partial
+  wake lock while it runs, re-arms itself when the task is swiped away, and a
+  15-minute watchdog alarm restarts it if the OEM stopped it anyway - keep
+  **Autostart** granted, otherwise MIUI may drop the alarm along with the
+  service.
 
 ## Security model
 
