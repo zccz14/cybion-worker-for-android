@@ -38,6 +38,26 @@ Download the latest APK from this repository's Releases and sideload it.
    the device from the Cybion console (`Workers → Connect a device`).
 4. Run the connection check in the console, then send tasks to the new Worker.
 
+## Controller entry selection
+
+The Controller answers on more than one entry domain: `.io` is the globally
+distributed edge, `.top` reaches the same Controller through the mainland one.
+Which is better depends on the network the phone is on — and a phone moves — so
+the app measures instead of assuming:
+
+- Pairing and startup probe every configured entry through the public `/health`
+  endpoint (three samples each, concurrently) and connect through whichever
+  answers best; an unreachable entry is skipped rather than retried forever.
+- The app switches entry after three consecutive failed reconnects, and
+  re-checks every 30 minutes while connected. A re-check only moves it when the
+  entry in use stops answering or is at least 20% slower, and never within a
+  minute of the previous switch, so a flaky mobile network cannot make it flap.
+- A switch closes the event stream so it reconnects through the new entry.
+  Heartbeats, receipts, results and upgrade reports resolve the entry per
+  attempt, so an upload in flight follows the switch instead of failing.
+- The config keeps the full list in the optional `controller_urls` field; a
+  config with only `controller_url` keeps behaving exactly as before.
+
 ## Security model
 
 Like the desktop Worker, this app is a remote-control agent, not a sandbox.

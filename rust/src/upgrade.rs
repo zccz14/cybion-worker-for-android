@@ -6,7 +6,7 @@
 //! version reported after the automatic restart.
 
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use anyhow::{Context, Result, bail, ensure};
@@ -90,6 +90,7 @@ enum Outcome {
 pub fn spawn(
     client: Client,
     config: WorkerConfig,
+    selector: Arc<crate::candidates::Selector>,
     boot_id: String,
     config_dir: PathBuf,
     upgrade: protocol::Upgrade,
@@ -104,7 +105,17 @@ pub fn spawn(
         return;
     }
     tokio::spawn(async move {
-        match run(&client, &config, &boot_id, &config_dir, &upgrade, shutdown).await {
+        match run(
+            &client,
+            &config,
+            &selector,
+            &boot_id,
+            &config_dir,
+            &upgrade,
+            shutdown,
+        )
+        .await
+        {
             Ok(Outcome::Done) => clear(&upgrade.id),
             Ok(Outcome::HandedOff) => {}
             Err(error) => {
@@ -112,6 +123,7 @@ pub fn spawn(
                 if let Err(report_error) = report(
                     &client,
                     &config,
+                    &selector,
                     &boot_id,
                     &upgrade.id,
                     "failed",
@@ -130,6 +142,7 @@ pub fn spawn(
 async fn run(
     client: &Client,
     config: &WorkerConfig,
+    selector: &Arc<crate::candidates::Selector>,
     boot_id: &str,
     config_dir: &Path,
     upgrade: &protocol::Upgrade,
@@ -150,7 +163,7 @@ async fn run(
     let apk = config_dir.join("upgrade").join(ASSET);
     let mut last_error = "no release source available".to_owned();
     let mut verified = false;
-    for source in asset_sources(&config.controller_url, &upgrade.version) {
+    for source in asset_sources(selector.current().base(), &upgrade.version) {
         if *shutdown.borrow() {
             return Ok(Outcome::Done);
         }
@@ -187,7 +200,17 @@ async fn run(
     log::info!(target: "cybion_worker", "handing {ASSET} to the system installer");
     platform::install_apk(&apk).context("the package installer rejected the APK")?;
     mark_handed_off(&upgrade.id);
-    if let Err(error) = report(client, config, boot_id, &upgrade.id, "installing", None).await {
+    if let Err(error) = report(
+        client,
+        config,
+        selector,
+        boot_id,
+        &upgrade.id,
+        "installing",
+        None,
+    )
+    .await
+    {
         log::warn!(target: "cybion_worker", "installing report rejected: {error:#}");
     }
     // The system installer owns the flow from here. Success is only visible
@@ -315,14 +338,14 @@ fn newer_version(target: &str, current: &str) -> bool {
 async fn report(
     client: &Client,
     config: &WorkerConfig,
+    selector: &Arc<crate::candidates::Selector>,
     boot_id: &str,
     id: &str,
     status: &str,
     error: Option<&str>,
 ) -> Result<()> {
-    let url = format!("{}/upgrade", protocol::worker_url(config));
     let payload = json!({"id": id, "status": status, "error": error});
-    delivery::post_until_confirmed(client, &config.access_token, boot_id, &url, &payload).await
+    delivery::post_until_confirmed(client, config, selector, "/upgrade", boot_id, &payload).await
 }
 
 #[cfg(test)]
