@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result, bail};
 use futures_util::StreamExt;
@@ -27,6 +27,10 @@ pub struct DeviceInfo {
 
 static DEVICE: OnceLock<DeviceInfo> = OnceLock::new();
 static ENGINE: Mutex<Option<Engine>> = Mutex::new(None);
+
+/// A stream that stayed up this long proves the link works, so an earlier drop
+/// must not inflate the backoff of the next reconnect.
+const STREAM_SETTLED: Duration = Duration::from_secs(30);
 
 struct Engine {
     shutdown: watch::Sender<bool>,
@@ -216,6 +220,7 @@ async fn run_worker(
         if attempt == 0 {
             state::set_phase(&state, Phase::Connecting);
         }
+        let session_started = Instant::now();
         let outcome = tokio::select! {
             result = event_session(
                 client.clone(),
@@ -239,8 +244,14 @@ async fn run_worker(
                     );
                     break;
                 }
+                if session_started.elapsed() >= STREAM_SETTLED {
+                    // The stream was healthy for a while: start the backoff over
+                    // so an upstream idle cut costs seconds, not half a minute of
+                    // the Worker reading as offline in the console.
+                    attempt = 0;
+                }
                 attempt = attempt.saturating_add(1);
-                log::warn!(target: "cybion_worker", "event stream ended: {error}; reconnecting");
+                log::warn!(target: "cybion_worker", "event stream ended: {error:#}; reconnecting");
                 state::set_phase(
                     &state,
                     Phase::Reconnecting {
@@ -251,7 +262,7 @@ async fn run_worker(
             }
         }
         tokio::select! {
-            _ = tokio::time::sleep(delivery::retry_delay(attempt)) => {}
+            _ = tokio::time::sleep(delivery::stream_retry_delay(attempt)) => {}
             _ = shutdown_requested(shutdown.clone()) => break,
         }
     }

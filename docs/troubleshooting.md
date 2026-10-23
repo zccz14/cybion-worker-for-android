@@ -12,6 +12,7 @@ the app; both name the current phase.
 | Accessibility shows Missing | The system dropped the service (force-stop, update, OEM cleanup) | Re-enable **Cybion Worker** under Settings → Accessibility. |
 | Screenshot fails or is black | Screen off, or device below API 30 | Wake the device and retry. |
 | One `409` on heartbeat right after a restart | Normal boot-id handoff | Ignore it; the next heartbeat succeeds. |
+| Worker flips to offline for ~30s every few minutes (builds ≤ 0.1.10) | The event stream was cut upstream and the reconnect inherited the delivery backoff (up to 30s); the console ties "online" to that stream | Fixed in 0.1.11: a stream that stayed up for 30s restarts the backoff and reconnects wait at most 5s. |
 | "browser_control is not supported" | By design on Android | Use `computer_use` with `open`, or the `open` action, instead. |
 | Upgrade stays `installing`; no installer prompt appeared | The OS suppressed the activity start issued from the background service | Tap the "update ready" notification to open the installer, then confirm. |
 | Upgrade failed: "installation was cancelled on the device" (only on builds ≤ 0.1.7) | MIUI/HyperOS rejects `PackageInstaller` session installs on Android 14 | Sideload v0.1.8 or newer once; those builds hand the APK to the system installer instead. |

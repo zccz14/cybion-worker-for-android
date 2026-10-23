@@ -69,6 +69,10 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".WorkerWatchdogReceiver"
+            android:exported="false"/>
+
         <!-- Serves the verified upgrade APK to the system installer. -->
         <provider
             android:name="androidx.core.content.FileProvider"
